@@ -1,0 +1,265 @@
+// Attributes
+:api-mgmt-service: 3scale
+:sso-ProductName: Red Hat Single Sign-On
+:3scale-ProductName: Red Hat 3scale
+:fuse-flights-aggregator-app-name: fuse-flights-aggregator-{user-sanitized-username}
+:orders-api-app-name: orders-api-{user-sanitized-username}
+:zync-client-id: zync-oidc
+// TODO: how to indicate client secret?
+:gateway-secret-token: apicast-very-secret-token-{user-sanitized-username}
+// TODO: update the name of the app
+
+= Managing Managing and protecting protecting APIs using API management
+
+:context: integrating-api-driven-applications
+
+This Solution Pattern demonstrates how an API can be protected and rate limited.
+
+Organizations modernizing their applications typically create many APIs.
+It then becomes paramount to understand the usage of these APIs and to ensure they are protected, for example, from a denial-of-service (DoS) attack.
+It is possible to protect and limit access to APIs as part of an integration.
+
+image::images/arch.png[integration, role="integr8ly-img-responsive"]
+
+[type=walkthroughResource,serviceName=openshift]
+.Red Hat OpenShift
+****
+* link:{openshift-host}/console[Console, window="_blank"]
+* link:https://help.openshift.com/[OpenShift Online Help Center, window="_blank"]
+* link:https://blog.openshift.com/[OpenShift Blog, window="_blank"]
+****
+
+[type=walkthroughResource,serviceName=user-rhsso]
+.Red Hat Single Sign-On
+****
+* link:{user-sso-url}/auth/admin/{user-sanitized-username}/console[Administration Console, window="_blank", id="{context}-1"] 
+* link:https://access.redhat.com/documentation/en-us/red_hat_single_sign-on[Documentation, window="_blank"]
+****
+
+[type=walkthroughResource,serviceName=3scale]
+.3scale
+****
+* link:https://{user-sanitized-username}-admin.{openshift-app-host}[Console, window="_blank"]
+* link:https://developers.redhat.com/products/3scale/overview/[3scale Overview, window="_blank"]
+* link:https://www.3scale.net[3scale Website, window="_blank"]
+****
+
+
+:sectnums:
+
+[time=5]
+
+== Configure Red Hat Single Sign-On
+
+We need to configure {sso-ProductName} to allow OpenID Connect authentication on the API gateway.
+
+=== Configure a client for Zync
+
+3scale synchronizes client credentials between 3scale and {sso-ProductName} using a component called Zync. Whenever a new application is created in 3scale, a client is created in the configured {sso-ProductName} realm. A client with special permissions needs to be configured to do this.
+
+. Log in to the link:{user-sso-url}/auth/admin/{user-sanitized-username}/console[{sso-ProductName} administration console, window="_blank", id="{context}-1"] using `{user-username}` as username and `password` as password.
+// TODO: verify password and place as attribute
+
+. Create a new client
+.. Click *Clients* from the side navigation.
+.. Click *Create* button.
+.. In the *Client ID* field, enter `{zync-client-id}`.
+.. Confirm that `openid-connect` is selected in the *Client Protocol* field.
+.. Click *Save*. You will be redirected to the client configuration screen.
+. Configure client basic settings
+.. On the *Settings* tab, set the following values for the fields:
+... Set _Access Type_ to `confidential`.
+... Set _Access Type_ to `confidential`.
+... Set _Standard Flow Enabled_ to `OFF`.
+... Set _Direct Access Grants Enabled_ to `OFF`.
+... Set _Service Accounts Enabled_ to `ON`.
+... Click *Save* to save the changes.
+. Configure client permissions
+.. Navigate to *Service Account Roles* tab of the client configuration page.
+.. In the _Client Roles_ drop-down list, select `realm-management`.
+.. In the _Available Roles_ pane, select the `manage-clients` list item and assign the role by clicking *Add selected* button.
+. Get the client secret
+.. Navigate to the *Credentials* tab of the client configuration page.
+.. Note the value in the *Secret* (it will be referred to as `ZYNC_SECRET`), it will be used in later steps.
+// TODO: where to store this auto-generated value?
+. Add a user to the realm
+.. Click *Users* from the side navigation.
+.. Click *Add user*.
+.. Type the username `{user-sanitized-username}-user`.
+.. Set the _Email Verified_ switch to `ON`.
+.. Click *Save*.
+.. Navigate to the *Credentials* tab of the screen.
+.. Type `{user-sanitized-username}-password` in *New Password* and *Password Confirmation** fields.
+.. Set *Temporary* switch to `OFF`.
+.. Click *Reset Password*, and when prompted, click *Change password*.
+
+
+[type=verification]
+Have you configured the `{zync-client-id}` client and `{user-sanitized-username}-user` user in your realm?
+
+[type=verificationFail]
+Verify that you followed each step in the procedure above. If you are still having issues, contact your administrator.
+
+:sectnums!:
+
+// Task resources go here
+[type=taskResource]
+.Task Resources
+****
+* link:https://access.redhat.com/documentation/en-us/red_hat_3scale_api_management/2.6/html/using_the_developer_portal/openid-connect[OpenID Connect Integration, window="_blank"]
+****
+
+
+:sectnums:
+
+[time=15]
+== Configure 3scale API Management
+
+=== Log in to 3scale API Management
+
+// TODO 'Password1' is hardcoded when creating tenants
+. Open the link:https://{user-sanitized-username}-admin.{openshift-app-host}[{3scale-ProductName} Login screen, window="_blank", id="{context}-6"].
+
+. Enter `{user-sanitized-username}` as username and `Password1` as password. You will be logged in {3scale-ProductName} Dashboard.
+
+[type=verification]
+Can you see the {3scale-ProductName} Dashboard and navigate the main menu?
+
+[type=verificationFail]
+Verify that you followed each step in the procedure above. If you are still having issues, contact your administrator.
+
+
+=== Add the Order API to Red Hat 3scale
+
+. From the *Dashboard*, select the *New API* item.
+. Select the *Define Manually* option.
+
++
+// TODO: dynamic fuse aggregation app name based on user id/email. "Only ASCII letters, numbers, dashes and underscores are allowed" for System name. e.g. fuse-aggregation-app-test01-example-com
+. Enter the following as the *Name* and *System name*:
++
+[subs="attributes+"]
+----
+{orders-api-app-name}
+----
+
+. Leave the *Description* field empty.
+
+. Click *Add API* at the bottom of the screen. The Order API service will be created and you will be redirected to the *Overview* page.
+
+=== Configure integration with Orders API
+
+. Select OpenID Connect as authentication method for the API.
+.. Click *Integration > Configuration* from the side navigation.
+.. Select *edit integration settings* in the top right corner.
+.. In the *Authentication* section at the bottom of the screen select *OpenID Connect*.
+.. Click *Update Service*.
+
+. Configure the integration with the Orders API.
+.. If you are not already on the *Configuration* page, click *Integration > Configuration* from the side navigation.
+.. Click *add the base URL of your API and save the configuration.*.
+.. In the *Private Base URL* field, enter:
++
+[subs="attributes+"]
+----
+{route-nodejs-messaging-work-queue-frontend-host}
+----
++
+.. In the *Staging Public Base URL*, enter:
++
+[subs="attributes+"]
+----
+https://{orders-api-app-name}-{user-sanitized-username}-apicast-staging.{openshift-app-host}
+----
+// NOTE: this is an auto-generated route, when a tenant is created
+.. In the *Production Public Base URL*, enter:
++
+[subs="attributes+"]
+----
+https://{orders-api-app-name}-{user-sanitized-username}-apicast-production.{openshift-app-host}
+----
+// NOTE: this is an auto-generated route, when a tenant is created
++
+.. Expand the *Authentication Settings* and make sure `Red Hat Single Sign-On` is selected in the *OpenID Connect Issuer Type*.
+.. In *OpenID Connect Issuer*, enter:
++
+[subs="attributes+"]
+----
+https://{zync-client-id}:ZYNC_SECRET@sso-user-sso.{openshift-app-host}/auth/realms/{user-sanitized-username}
+----
+Replace `ZYNC_SECRET` with the value of the Client Secret of the `{zync-client-id}` client created previously in {sso-ProductName}.
+// an example of the eval users's realm: https://sso-user-sso.apps.dmayorov-225b.open.redhat.com/auth/realms/evals01
+.. In *OIDC Authorization Flow*, keep the `Authorization Code Flow` checkbox enabled.
+.. In the *Secret Token* field *OIDC Authorization Flow*, enter:
++
+[subs="attributes+"]
+----
+{gateway-secret-token}
+----
+.. In the *Credentials location*, select "As HTTP Headers" radio button.
+.. Click *Update the Staging Environment*.
++
+[type=verification]
+Was the configuration saved successfully without any errors?
+
+[type=verificationFail]
+Verify that you followed each step in the procedure above. If you are still having issues, contact your administrator.
+
+=== Configure an Application Plan and an Application
+
+. Create a new *Application Plan*:
+.. Click *Applications > Application Plans* from the side navigation.
+.. Click *Create Application Plan*.
+.. Enter the following for *Name* and *System name*:
++
+[subs="attributes+"]
+----
+{orders-api-app-name}
+----
+.. Leave the other fields with their default values.
+.. Select *Create Application Plan*. You will be redirected to the *Application Plans* screen.
+.. Select the *Publish* button, beside your plan list item, to publish the Plan.
+// TODO: publishing might not be needed if no Developer Portal is involved
+
+. Select the *{orders-api-app-name}* plan in the list to return to the edit screen.
+
+. Set a limit of 5 calls per hour:
+.. From the *Metrics, Methods, Limits & Pricing Rules* section, click the *Limits (0)* button.
+.. Click the *New usage limit* button.
+.. Set the *Period* to *hour*.
+.. Set the *Max. value* to *5*.
+.. Click *Create usage limit*.
+.. Click *Update Application plan*.
+
+. Create a new *Application* for the *Developer* Group, assigned to the Plan:
+.. Select *Audience* from the top navigation bar dropdown.
+.. Select the *Developer* Account to open the *Account Summary* page.
+.. Select the *(num) Application* item from the breadcrumb to view Applications.
+.. Click the *Create Application* button in the top right.
+.. Select the *{orders-api-app-name}* Plan in the *Application plan* dropdown.
+.. Enter the following for *Name* and *Description*:
++
+[subs="attributes+"]
+----
+{orders-api-app-name}
+----
+.. Click *Create Application*. You will be redirected to the application details page.
+.. Note the *Client ID* and *Client Secret* that are generated automatically.
+
+When the application is created, 3scale should create a client for that application in {sso-ProductName} realm. 
+
+[type=verification]
+****
+Go to the link:{user-sso-url}/auth/admin/{user-sanitized-username}/console[{sso-ProductName} administration console, window="_blank", id="{context}-1"] and see if you see the client with the same ID that the application in 3scale.
+
+Can you see the client in your realm?
+****
+
+[type=verificationFail]
+Verify that you followed each step in the procedure above. If you are still having issues, contact your administrator.
+
+[type=taskResource]
+.Task Resources
+****
+* link:https://access.redhat.com/documentation/en-us/red_hat_3scale/2.3/html-single/access_control/[Access Control and Application Plans, window="_blank"]
+****
