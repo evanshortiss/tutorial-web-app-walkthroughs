@@ -53,6 +53,18 @@
             "PG_PASSWORD": "password"
           }
         }
+      },
+      {
+        "metadata": {
+          "name": "rhmi-lab-order-management-ui"
+        },
+        "spec": {
+          "clusterServiceClassExternalName": "rhmi-lab-order-management-ui",
+          "clusterServicePlanExternalName": "default",
+          "parameters": {
+            "ORDERS_API_BASE_URL": "{{ route-orders-fuse-api-host }}"
+          }
+        }
       }
     ],
     "templates": []
