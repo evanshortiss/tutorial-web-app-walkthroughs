@@ -12,24 +12,57 @@
     "serviceInstances": [
       {
         "metadata": {
-          "name": "spring-boot-rest-http-crud"
+          "name": "postgresql-persistent"
         },
         "spec": {
-          "clusterServiceClassExternalName": "spring-boot-rest-http-crud",
-          "clusterServicePlanExternalName": "default"
+          "clusterServiceClassExternalName": "postgresql-persistent",
+          "clusterServicePlanExternalName": "default",
+          "parameters": {
+            "DATABASE_SERVICE_NAME": "orders-db",
+            "POSTGRESQL_DATABASE": "orders",
+            "POSTGRESQL_USER": "{{ user-username }}",
+            "POSTGRESQL_PASSWORD": "password"
+          }
         }
       },
       {
         "metadata": {
-          "name": "nodejs-messaging-work-queue-frontend"
+          "name": "rhmi-lab-nodejs-order-ui"
         },
         "spec": {
-          "clusterServiceClassExternalName": "nodejs-messaging-work-queue-frontend",
+          "clusterServiceClassExternalName": "rhmi-lab-nodejs-order-ui",
           "clusterServicePlanExternalName": "default",
           "parameters": {
             "MESSAGING_SERVICE_PASSWORD": "{{ enmasse-credentials-password }}",
             "MESSAGING_SERVICE_USER": "{{ enmasse-credentials-username }}",
             "MESSAGING_SERVICE_HOST": "{{ enmasse-broker-url }}"
+          }
+        }
+      },
+      {
+        "metadata": {
+          "name": "rhmi-lab-fuse-internal-orders-api"
+        },
+        "spec": {
+          "clusterServiceClassExternalName": "rhmi-lab-fuse-internal-orders-api",
+          "clusterServicePlanExternalName": "default",
+          "parameters": {
+            "PG_HOSTNAME": "orders-db.{{ walkthrough-namespace }}.svc",
+            "PG_DATABASE": "orders",
+            "PG_USERNAME": "{{ user-username }}",
+            "PG_PASSWORD": "password"
+          }
+        }
+      },
+      {
+        "metadata": {
+          "name": "rhmi-lab-order-management-ui"
+        },
+        "spec": {
+          "clusterServiceClassExternalName": "rhmi-lab-order-management-ui",
+          "clusterServicePlanExternalName": "default",
+          "parameters": {
+            "ORDERS_API_BASE_URL": "{{ route-orders-fuse-api-host }}"
           }
         }
       }

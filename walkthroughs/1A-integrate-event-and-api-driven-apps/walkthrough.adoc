@@ -20,8 +20,10 @@ This is not trivial, because of the conflicting underlying timing models. The da
 
 In this Solution Pattern, create a simple and intuitive integration with built-in monitoring, to enable communication between two applications:
 
-* A Node.js webapp provides a method to create messages, in this example, a new inventory item.
-* A Spring Boot CRUD app provides a RESTful API, in this example, an inventory API.
+* An Order Entry System, built with Node.js, that provides a RESTful API and UI to create order messages.
+* An Order Management System RESTful API, built with Red Hat Fuse, for querying and creating orders in an underlying PostgreSQL.
+* An Order Management System UI, built with Node.js, for visualising orders in the PostgreSQL via the Fuse RESTful API.
+
 
 To create this integration, use link:{enmasse-url}[AMQ Online, window="_blank", id="wt1a_GS_enmasse-url"] and API connectors in link:{fuse-url}[Red Hat Fuse Online, window="_blank", id="wt1a_GS_fuse-url"].
 
@@ -74,7 +76,7 @@ image::images/arch.png[integration, role="integr8ly-img-responsive"]
 
 // tag::creating-api-connector[]
 
-To route messages to the Spring Boot app, create an address in AMQ Online.
+To route messages from the Order Entry System to the Order Management System, create an address in AMQ Online.
 
 . Log into link:{enmasse-url}[AMQ Online, window="_blank", id="{context}-1"].
 . Select *Addresses* from the left hand menu.
@@ -124,7 +126,7 @@ Verify that you followed each step in the procedure above. If you are still havi
 
 Fuse Online is an enterprise integration platform that provides connectors for many services, such as Gmail and IRC.
 It can be extended with custom connectors, using either OpenAPI definitions (Swagger) or JAR files.
-To create a connector for the RESTful API, register the OpenAPI definition as a *Customization*.
+To create a connector for the Fuse RESTful API, register the OpenAPI definition as a *Customization*.
 
 . Log in to the link:{fuse-url}[Red Hat Fuse Online, window="_blank", id="{context}-1"] console.
 +
@@ -139,7 +141,7 @@ NOTE: You are not logging into the shared Fuse Online instance, available from t
 +
 [subs="attributes+", id="route-crud-host-url-connector"]
 ----
-{route-crud-host}/v2/api-docs
+{route-orders-fuse-api-host}/openapi.json
 ----
 
 .. Click *Next*.
@@ -178,7 +180,7 @@ Verify that you followed each step in the procedure above.  If you are still hav
 [.integr8ly-docs-header]
 === Creating HTTP connection to CRUD App
 
-To enable Fuse Online to send messages from the queue to the Spring Boot CRUD app, create a connection in Red Hat Fuse Online using the API connector you just created.
+To enable Fuse Online to send messages from the queue to the Order Management System, create a connection in Red Hat Fuse Online using the API connector you just created.
 
 
 . Log in to the link:{fuse-url}[Red Hat Fuse Online, window="_blank", id="{context}-3"] console.
@@ -194,9 +196,9 @@ To enable Fuse Online to send messages from the queue to the Spring Boot CRUD ap
 +
 [subs="attributes+", id="route-crud-host-url"]
 ----
-{route-crud-host}
+{route-orders-fuse-api-host}
 ----
-.. Accept the default value in the *Base path* field
+.. Enter forward slash, i.e `/`, in the *Base path* field
 
 . When prompted with *Name connection*:
 .. Enter the following in the *Name* field:
@@ -220,7 +222,7 @@ Verify that you followed each step in the procedure above.  If you are still hav
 [.integr8ly-docs-header]
 === Creating AMQP connection in Red Hat Fuse Online
 
-To allow Fuse Online to consume messages placed on the queue by the Node.js webapp, create a connection in Red Hat Fuse Online.
+To allow Fuse Online to consume messages placed on the queue by the Order Entry System, create a connection in Red Hat Fuse Online.
 
 
 :fuse-url: https://eval.apps.city.openshiftworkshop.com/
@@ -327,7 +329,16 @@ work-queue-requests
 	"$schema": "http://json-schema.org/draft-04/schema#",
 	"type": "object",
 	"properties": {
-		"type": {
+		"product": {
+			"type": "string"
+		},
+		"quantity": {
+			"type": "number"
+		},
+		"datetime": {
+			"type": "string"
+		},
+		"message_id": {
 			"type": "string"
 		}
 	}
@@ -337,15 +348,15 @@ work-queue-requests
 
 . Choose *Walkthrough 1A CRUD Connection* as the *Finish Connection*.
 
-. When prompted to *Choose an Action*, select *Create a fruit*.
+. When prompted to *Choose an Action*, select *Create an order*.
 
 . When prompted with *Configure the action* click *Next*.
 
-. When prompted to *Add to Integration*, click on the blue *+* icon in the left panel.
+. When prompted to *Add to Integration*, click on the blue *+* icon between the *Subscribe for messages* and *Create an order* elements.
 
 . Select *Data Mapper* to map source and target fields in the corresponding JSON schemas:
 .. Expand the *body* item in the *Target* tree to reveal the *name* item.
-.. Click and drag *type* from the *Source* column to *body/name* in the *Target* column.
+.. Click and drag *datetime*, *message_id*, *product*, and *quantity* from the *Source* column to their corresponding locations under *body* in the *Target* column.
 .. Click *Done* to navigate back to the *Integration* screen.
 
 . Click *Publish*.
@@ -387,25 +398,20 @@ Is the integration displayed as *Running* on the *Integration* screen of the lin
 == Using the application integration
 :context: using-the-application-integration
 
-After setting up the integration between the Node.js and Spring Boot applications, use the integration to create a new fruit for the grocery inventory application.
+After setting up the integration between the Order Entry System and Order Management System, use the integration to create a new order.
 
 :node-url: http://frontend-node-app.apps.city.openshiftworkshop.com/
 :spring-url: http://spring-boot-rest-http-crud-spring-app.apps.city.openshiftworkshop.com/
 :fuse-url: https://eval.apps.city.openshiftworkshop.com/
 
-. Navigate to the link:{route-frontend-host}[Node.js webapp, window="_blank", id="{context}-1"].
+. Navigate to the link:{route-order-entry-ui-host}[Order Entry System, window="_blank", id="{context}-1"].
+. Click the *Create an order* button.
+. Enter a value for *Part Name*, e.g `Engine`, and a quantity, e.g `1`.
+. Click *Save*.
 
-. Enter a value for *Fruit*, for example:
-+
-----
-Pineapple
-----
+. Navigate to the link:{route-order-management-ui-host}[Order Management System, window="_blank", id="{context}-2"].
 
-. Click *Send Request*.
-
-. Navigate to the link:{route-crud-host}[Spring Boot app, window="_blank", id="{context}-2"].
-
-. Check that the entry from the Node.js webapp is displayed.
+. Check that the entry from the Order Entry System is listed in the Order Management System.
 
 
 [type=verification]
