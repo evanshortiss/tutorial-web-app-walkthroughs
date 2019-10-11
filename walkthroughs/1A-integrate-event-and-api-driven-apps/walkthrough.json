@@ -62,7 +62,7 @@
           "clusterServiceClassExternalName": "rhmi-lab-order-management-ui",
           "clusterServicePlanExternalName": "default",
           "parameters": {
-            "ORDERS_API_BASE_URL": "{{ route-orders-fuse-api-host }}"
+            "ORDERS_API_BASE_URL": "http://rhmi-lab-internal-fuse-api.{{ walkthrough-namespace }}.svc:8080"
           }
         }
       }
