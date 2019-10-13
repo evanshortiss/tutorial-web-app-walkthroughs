@@ -9,16 +9,19 @@
 :gateway-secret-token: apicast-very-secret-token-{user-sanitized-username}
 // TODO: update the name of the app
 
-= Managing and protecting protecting the Order API using API management
+= Managing and protecting APIs using API management
 
 :context: integrating-api-driven-applications
 
 This Solution Pattern demonstrates how an API can be protected and rate limited.
 
+NOTE: You must complete the *Integrating message-oriented middleware with a RESTful API using AMQ Online* Solution Pattern prior to starting this one.
+
 Organizations modernizing their applications typically create many APIs.
 It then becomes paramount to understand the usage of these APIs and to ensure they are protected, for example, from a denial-of-service (DoS) attack.
 It is possible to protect and limit access to APIs as part of an integration.
 
+// TODO: provide a different image
 image::images/arch.png[integration, role="integr8ly-img-responsive"]
 
 [type=walkthroughResource,serviceName=openshift]
