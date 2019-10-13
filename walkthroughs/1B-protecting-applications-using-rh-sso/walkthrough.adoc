@@ -23,8 +23,8 @@ RESTful API using AMQ Online* Solution Pattern.
 .Red Hat OpenShift
 ****
 * link:{openshift-host}/console[Console, window="_blank"]
-* link:https://help.openshift.com/[Openshift Online Help Center, window="_blank"]
-* link:https://blog.openshift.com/[Openshift Blog, window="_blank"]
+* link:https://help.openshift.com/[OpenShift Online Help Center, window="_blank"]
+* link:https://blog.openshift.com/[OpenShift Blog, window="_blank"]
 ****
 
 [type=walkthroughResource,serviceName=3scale]
