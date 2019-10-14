@@ -1,11 +1,11 @@
-:sso-realm-url: https://sso-user-sso.{{openshift-app-host}/auth/admin/{user-username}/console/index.html
+:sso-realm-url: {user-sso-url}/auth/admin/{user-sanitized-username}/console/index.html
 :sso-adapter-docs-url: https://access.redhat.com/documentation/en-us/red_hat_single_sign-on/7.3/html/securing_applications_and_services_guide/index
 
 = Protecting Applications using Red Hat Single Sign-On (SSO)
 
 This Solution Pattern demonstrates how Red Hat SSO can be used to protect web applications by providing single sign-on capabilities based on popular standards such as SAML 2.0, OpenID Connect and OAuth 2.0.
 
-_Note: You must complete the *Integrating message-oriented middleware with a RESTful API using AMQ Online* Solution Pattern prior to starting this one._
+NOTE: You must complete the *Integrating message-oriented middleware with a RESTful API using AMQ Online* Solution Pattern prior to starting this one.
 
 Each Red Hat Managed Integration cluster includes two Red Hat SSO instances.
 One is known as the *Cluster SSO* instance and is used to provide
@@ -23,8 +23,8 @@ RESTful API using AMQ Online* Solution Pattern.
 .Red Hat OpenShift
 ****
 * link:{openshift-host}/console[Console, window="_blank"]
-* link:https://help.openshift.com/[Openshift Online Help Center, window="_blank"]
-* link:https://blog.openshift.com/[Openshift Blog, window="_blank"]
+* link:https://help.openshift.com/[OpenShift Online Help Center, window="_blank"]
+* link:https://blog.openshift.com/[OpenShift Blog, window="_blank"]
 ****
 
 [type=walkthroughResource,serviceName=3scale]
@@ -51,14 +51,14 @@ Securing an application using Red Hat SSO requires a *Client* to be created in
 a *Realm*. The *Client* represents the application being secured and contains
 important details regarding the security applied to the application.
 
-. Navigate to the link:{:sso-realm-url:}[Red Hat SSO Realm, window="_blank"].
+. Navigate to the link:{sso-realm-url}[Red Hat SSO Realm, window="_blank"].
 . Enter the username `{user-username}` and password `password` if prompted.
 . Details for realm named {user-username} are displayed upon login success.
 . Select *Clients* from the menu on the left.
 . Click the *Create* button at the top of the list of clients to display the *Add Client* screen:
 .. Enter `order-entry-system` in the *Client ID* field.
-.. Paste the URL of the *Order Entry System* from the previous Solution Pattern in the *Root URL* field. This should look similar to `https://order-entry-ui-<NAMESPACE>.{openshift-app-host}`
 .. Verify *Client Protocol* is set to `openid-connect`.
+.. Paste the URL of the *Order Entry System* from the previous Solution Pattern in the *Root URL* field. This should look similar to `https://order-entry-ui-<NAMESPACE>.{openshift-app-host}`
 .. Click *Save*.
 . The *Settings* screen for the `order-entry-system` client should be displayed.
 . Verify that the *Access Type* field is set to `public`. This means the client is a frontend application that needs to login via a web browser.
@@ -82,7 +82,7 @@ in the Red Hat SSO *Realm* with the details from their chosen
 In this Solution Pattern a *User* will be created manually to keep things
 simple.
 
-. Navigate to the link:{:sso-realm-url:}[Red Hat SSO Realm, window="_blank"].
+. Navigate to the link:{sso-realm-url}[Red Hat SSO Realm, window="_blank"].
 . Enter the username `{user-username}` and password `password` if prompted.
 . Select the *Users* entry in the side menu.
 . Click *Add user*.
@@ -117,14 +117,14 @@ Various platforms are supported with *Client Adapters*:
 . JavaScript (client-side)
 . Servlet Filter
 
-The *Order Entry System* is run from a Node.js server so the Node.js
+The *Order Entry System* is run from a Node.js server, so the Node.js
 `keycloak-connect` adapter is included in the code. The following steps will
 demonstrate how to include a configuration and enable the adapter.
 
-_Note: Enabling the adapter can vary depending on how an application has been
+NOTE: Enabling the adapter can vary depending on how an application has been
 coded. The Order Entry System has been developed to disable Red Hat SSO
 protection if a configuration is not found on startup. For a real application
-this may not be advisable._
+this may not be advisable.
 
 . Navigate to the link:{:sso-realm-url:}[Red Hat SSO Realm, window="_blank"].
 . Enter the username `{user-username}` and password `password` if prompted. 
@@ -159,7 +159,7 @@ this may not be advisable._
 . Scroll down and click *Save*.
 . Select *Overview* on the left and find the *rhmi-lab-nodejs-order-frontend* in the list.
 . Wait for it to finish deploying.
-. Click the route listed beside the *rhmi-lab-nodejs-order-frontend* to open the *Order Entry System*. A login screen with the title *{user-username} Realm* is displayed.
+. Open the URL listed beside the *rhmi-lab-nodejs-order-frontend* in a private browser session to open the *Order Entry System*. A login screen with the title *{user-username} Realm* is displayed.
 .. Enter `customer` in the *Username or email*.
 .. Enter `customer-password` in the *Password* field.
 .. Click the *Log In* button.

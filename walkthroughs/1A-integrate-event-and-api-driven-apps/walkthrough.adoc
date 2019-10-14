@@ -37,8 +37,8 @@ image::images/arch.png[integration, role="integr8ly-img-responsive"]
 .Red Hat OpenShift
 ****
 * link:{openshift-host}/console[Console, window="_blank"]
-* link:https://help.openshift.com/[Openshift Online Help Center, window="_blank"]
-* link:https://blog.openshift.com/[Openshift Blog, window="_blank"]
+* link:https://help.openshift.com/[OpenShift Online Help Center, window="_blank"]
+* link:https://blog.openshift.com/[OpenShift Blog, window="_blank"]
 ****
 
 [type=walkthroughResource,serviceName=fuse]
@@ -116,10 +116,10 @@ Verify that you followed each step in the procedure above. If you are still havi
 To store Orders a table must be created in the PostgreSQL that was provisioned.
 
 . Log into link:{openshift-host}/console/project/{walkthrough-namespace}/overview[OpenShift Namespace, window="_blank"] for this walkthrough.
-. Select *Addresses > Pods* from the left hand menu.
-. Click the Pod that has the name *orders-db* followed by an ID
-. On the Pod details screen select the *Terminal* tab and issue.
-. Login to the *orders* database using the command `psql -U {user-username} -W -d orders`.
+. Select *Applications > Pods* from the left hand menu.
+. Click the Pod that has the name *orders-db* followed by an ID.
+. On the Pod details screen select the *Terminal* tab.
+. Log in to the *orders* database using the command `psql -U {user-username} -W -d orders`.
 . Enter the password `password` when prompted.
 . Paste the following as SQL to create the *received_orders* table:
 +
@@ -182,7 +182,7 @@ NOTE: You are not logging into the shared Fuse Online instance, available from t
 . When prompted with *Specify Security*, select *Next*.
 
 . When prompted with *Review/Edit Connector Details*:
-.. Enter the following in the *Connector Name* field:
+.. Enter the following in the *Name* field:
 +
 [subs="attributes+"]
 ----
@@ -192,7 +192,7 @@ Walkthrough 1A CRUD Connector
 .. Click *Save*.
 
 [type=verification]
-Is the new connector displayed on the *Customizations* screen of the link:{fuse-url}[Red Hat Fuse Online, window="_blank", id="{context}-2"] console?
+Is the new connector displayed on the *Customizations > API Client Connectors* screen of the link:{fuse-url}[Red Hat Fuse Online, window="_blank", id="{context}-2"] console?
 
 [type=verificationFail]
 Verify that you followed each step in the procedure above.  If you are still having issues, contact your administrator.
@@ -220,7 +220,7 @@ To enable Fuse Online to send messages from the queue to the Order Management Sy
 
 . Select the *Create Connection* button to start the *Create Connection* wizard.
 
-. When prompted with *Select Connector*, select *Walkthrough 1A CRUD Connector*.
+. When prompted with *Select connector*, select *Walkthrough 1A CRUD Connector*.
 
 . When prompted with *Configure connection*:
 .. Enter the following in the *Host* field:
@@ -289,7 +289,7 @@ amqp://{enmasse-broker-url}:5672?amqp.saslMechanisms=PLAIN
 {enmasse-credentials-password}
 ----
 
-. Set the value of *Check Certificates* to `Disable`.
+. Set the value of *Check certificates* to `Disable`.
 
 . Select the *Validate* button to check that the values are valid.
 
@@ -339,16 +339,16 @@ To use the Fuse connections, create an integration in Red Hat Fuse Online.
 
 . Choose *Walkthrough 1A Messaging App* as the *Start Connection*.
 
-. When prompted to *Choose an Action*, select *Subscribe for messages*.
+. When prompted to *Choose an action*, select *Subscribe for messages*.
 
-. When prompted for a *Destination Name*, enter:
+. When prompted for a *Destination name*, enter:
 +
 [subs="attributes+"]
 ----
 work-queue-requests
 ----
 
-. Choose *Queue* as the *Destination Type* and click *Next*.
+. Choose *Queue* as the *Destination type* and click *Next*.
 
 . When prompted to *Specify Output Data Type*:
 .. Select *JSON Schema* as the type.
@@ -379,14 +379,14 @@ work-queue-requests
 
 . Choose *Walkthrough 1A CRUD Connection* as the *Finish Connection*.
 
-. When prompted to *Choose an Action*, select *Create an order*.
+. When prompted to *Choose an action*, select *Create an order*.
 
 . When prompted with *Configure the action* click *Next*.
 
 . When prompted to *Add to Integration*, click on the blue *+* icon between the *Subscribe for messages* and *Create an order* elements.
 
 . Select *Data Mapper* to map source and target fields in the corresponding JSON schemas:
-.. Expand the *body* item in the *Target* tree to reveal the *name* item.
+.. Expand the *body* item in the *Target* tree.
 .. Click and drag *datetime*, *message_id*, *product*, and *quantity* from the *Source* column to their corresponding locations under *body* in the *Target* column.
 .. Click *Done* to navigate back to the *Integration* screen.
 
@@ -403,7 +403,7 @@ Walkthrough 1A
 The integration may take some time to complete building.
 
 [type=verification]
-Is the integration displayed as *Running* on the *Integration* screen of the link:{fuse-url}[Red Hat Fuse Online, window="_blank", id="{context}-1"] console?
+Is the integration displayed as *Running* on the *Integrations* screen of the link:{fuse-url}[Red Hat Fuse Online, window="_blank", id="{context}-1"] console?
 
 [type=verificationFail]
 
@@ -451,7 +451,7 @@ View the activity log:
 
 . Log in to the link:{fuse-url}[Red Hat Fuse Online, window="_blank", id="{context}-3"] console.
 . Select *Integrations* from the left hand menu.
-. Select your integration.
+. Click *View* button for your integration.
 . Click the *Activity* tab.
 . Expand the log entry to display the steps performed.
 
