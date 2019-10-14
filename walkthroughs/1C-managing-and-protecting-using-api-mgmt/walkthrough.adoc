@@ -100,6 +100,8 @@ Verify that you followed each step in the procedure above. If you are still havi
 [time=5]
 == Configure 3scale API Management
 
+3scale API Management is a multitenant software, it allows multiple independent instances to coexist on the same deployment. In this Solution Pattern each user has its own personal 3scale account, isolated from other users.
+
 === Log in to 3scale API Management
 
 . Open the link:https://{user-sanitized-username}-admin.{openshift-app-host}[{3scale-ProductName} Login screen, window="_blank"].
@@ -132,7 +134,7 @@ Verify that you followed each step in the procedure above. If you are still havi
 . Configure the integration with the Orders API:
 .. If you are not already on the *Configuration* page, click *Integration > Configuration* from the side navigation.
 .. Click *add the base URL of your API and save the configuration.*
-.. In the *Private Base URL* field, enter the URL of the *Order Entry System* from the previous Solution Pattern that should look like this: `https://order-entry-ui-<NAMESPACE>.{openshift-app-host}`.
+.. In the *Private Base URL* field, enter the URL of the *Order Entry System* from the previous Solution Pattern that should look like this: `http://rhmi-lab-nodejs-order-frontend.<NAMESPACE>.svc:8080`. We can use the internal service DNS here, because both the API gateway, and the API itself are deployed on the same OpenShift cluster. In case the API was deployed on a different cluster or outside of OpenShift, a public URL would be required.
 .. Keep the fields *Staging Public Base URL* and *Production Public Base URL* unchanged, their values should look as follows:
 +
 [subs="attributes+"]
@@ -173,6 +175,7 @@ Was the configuration saved successfully without any errors?
 Verify that you followed each step in the procedure above. If you are still having issues, contact your administrator.
 
 === Configure an Application Plan and an Application
+Application Plans define what kind of access to which resources is granted to the API consumers. This includes which methods or endpoints are accessible, the rate limits globally for the API or for each endpoint. Finally, in case the API is monetized, pricing can be defined in the Application Plan.
 
 . Create a new *Application Plan*:
 .. Select *Applications > Application Plans* from the side navigation.
@@ -219,7 +222,7 @@ For testing the API from the Developer Portal, we'll need to enable CORS on the 
 . Log in to link:{user-sso-url}/auth/admin/{user-sanitized-username}/console[{sso-ProductName} administration console, window="_blank"].
 . Click *Clients* from the side navigation.
 . Select the client that was created by 3scale from the clients list by clicking on its *Client ID*.
-. At the bottom of the page, enter `+` in the *Web Origins* field. This will allow CORS for the origins of the *Valid Redirect URIs* (will be configured later). You can also enter `*` to permit all origins.
+. At the bottom of the page, enter `+` in the *Web Origins* field. This will allow CORS for the origins of the *Valid Redirect URIs* (will be configured later). You could also enter `*` to permit all origins, but it is considered a bad practice as it poses a security risk.
 . Click *Save* to save the changes.
 
 [type=taskResource]
@@ -334,7 +337,7 @@ Verify that you followed each step in the procedure above. If you are still havi
 +
 . Get the application credentials:
 .. Click *API Credentials* in the top navigation bar.
-.. Select *< Applications*.
+.. Select *Applications*.
 .. Click on the `orders-api-app` name.
 .. You will see the application credentials – Client ID and Client Secret.
 .. In the *Redirect URL* field enter `https://{user-sanitized-username}.{openshift-app-host}/oauth2-redirect.html`. This will be the Redirect URL for the OAuth handshake, and it points to the HTML page on the Developer Portal we created in a previous step.
