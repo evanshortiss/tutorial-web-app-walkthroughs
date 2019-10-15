@@ -1,0 +1,384 @@
+// Attributes
+:api-mgmt-service: 3scale
+:sso-ProductName: Red Hat Single Sign-On
+:3scale-ProductName: Red Hat 3scale
+:fuse-flights-aggregator-app-name: fuse-flights-aggregator-{user-sanitized-username}
+:zync-client-id: zync-oidc
+:gateway-secret-token: apicast-secret-token-{user-sanitized-username}
+
+= Managing and protecting APIs using API management
+
+This Solution Pattern demonstrates how an API can be protected and rate limited.
+
+NOTE: You must complete the *Integrating message-oriented middleware with a RESTful API using AMQ Online* Solution Pattern prior to starting this one.
+
+Organizations modernizing their applications typically create many APIs.
+It then becomes paramount to understand the usage of these APIs and to ensure they are protected, for example, from a denial-of-service (DoS) attack.
+It is possible to protect and limit access to APIs as part of an integration.
+
+Red Hat Managed Integration comes with an instance of Red Hat 3scale API Management that allows managing API credentials, rate limits, and also provides a Developer Portal which helps end users to see their credentials and consult the API documentation.
+
+image::images/arch.png[integration, role="integr8ly-img-responsive"]
+
+[type=walkthroughResource,serviceName=openshift]
+.Red Hat OpenShift
+****
+* link:{openshift-host}/console[Console, window="_blank"]
+* link:https://help.openshift.com/[OpenShift Online Help Center, window="_blank"]
+* link:https://blog.openshift.com/[OpenShift Blog, window="_blank"]
+****
+
+[type=walkthroughResource,serviceName=user-rhsso]
+.Red Hat Single Sign-On
+****
+* link:{user-sso-url}/auth/admin/{user-sanitized-username}/console[Administration Console, window="_blank"] 
+* link:https://access.redhat.com/documentation/en-us/red_hat_single_sign-on[Documentation, window="_blank"]
+****
+
+[type=walkthroughResource,serviceName=3scale]
+.3scale
+****
+* link:https://{user-sanitized-username}-admin.{openshift-app-host}[Admin Portal, window="_blank"]
+* link:https://developers.redhat.com/products/3scale/overview/[3scale Overview, window="_blank"]
+* link:https://www.3scale.net[3scale Website, window="_blank"]
+****
+
+
+:sectnums:
+
+[time=5]
+== Configure OpenID Connect in Red Hat Single Sign-On
+
+{3scale-ProductName} supports several authentication methods, including a single API key, a pair of Application ID and Application key, and OpenID Connect. The latter is the most secure way to protect APIs.
+We need to configure {sso-ProductName} to allow OpenID Connect authentication on the API gateway.
+
+=== Configure a client for Zync
+
+3scale synchronizes client credentials between 3scale and {sso-ProductName} using a component called Zync. Whenever a new application is created in 3scale, a client is created in the configured {sso-ProductName} realm. A client with special permissions needs to be configured to do this.
+
+. Log in to the link:{user-sso-url}/auth/admin/{user-sanitized-username}/console[{sso-ProductName} administration console, window="_blank"] using `{user-username}` as username and `password` as password.
+
+. Create a new client:
+.. Click *Clients* from the side navigation.
+.. Click *Create* button.
+.. In the *Client ID* field, enter `{zync-client-id}`.
+.. Confirm that `openid-connect` is selected in the *Client Protocol* field.
+.. Click *Save*. You will be redirected to the client configuration screen.
+. Configure client basic settings:
+.. On the *Settings* tab, set the following values for the fields:
+... Set _Access Type_ to `confidential`.
+... Set _Standard Flow Enabled_ to `OFF`.
+... Set _Direct Access Grants Enabled_ to `OFF`.
+... Set _Service Accounts Enabled_ to `ON`.
+... Click *Save* to save the changes.
+. Configure client permissions:
+.. Navigate to *Service Account Roles* tab of the client configuration page.
+.. In the _Client Roles_ drop-down list, select `realm-management`.
+.. In the _Available Roles_ pane, select the `manage-clients` list item and assign the role by clicking *Add selected* button.
+. Get the client secret:
+.. Navigate to the *Credentials* tab of the client configuration page.
+.. Note the value in the *Secret* field (it will be referred to as `ZYNC_SECRET`), it will be used in later steps.
+
+[type=verification]
+Have you configured the `{zync-client-id}` client and noted its Client Secret?
+
+[type=verificationFail]
+Verify that you followed each step in the procedure above. If you are still having issues, contact your administrator.
+
+:sectnums!:
+
+// Task resources go here
+[type=taskResource]
+.Task Resources
+****
+* link:https://access.redhat.com/documentation/en-us/red_hat_3scale_api_management/2.6/html/using_the_developer_portal/openid-connect[OpenID Connect Integration, window="_blank"]
+****
+
+
+:sectnums:
+
+[time=5]
+== Configure 3scale API Management
+
+3scale API Management is a multitenant software, it allows multiple independent instances to coexist on the same deployment. In this Solution Pattern each user has its own personal 3scale account, isolated from other users.
+
+=== Log in to 3scale API Management
+
+. Open the link:https://{user-sanitized-username}-admin.{openshift-app-host}[{3scale-ProductName} Login screen, window="_blank"].
+
+. Enter `{user-sanitized-username}` as username and `password` as password. You will be logged in {3scale-ProductName} Dashboard.
+
+[type=verification]
+Can you see the {3scale-ProductName} Dashboard and navigate the main menu?
+
+[type=verificationFail]
+Verify that you followed each step in the procedure above. If you are still having issues, contact your administrator.
+
+=== Add the Order API to Red Hat 3scale
+
+. From the *Dashboard*, select the *New API* item.
+. Select the *Define Manually* option.
+. Enter `orders-api` as the *Name* and *System name*:
+. Leave the *Description* field empty.
+. Click *Add API* at the bottom of the screen. The Order API service will be created and you will be redirected to the *Overview* page.
+
+=== Configure integration with Orders API
+
+. Configure OpenID Connect as authentication method for the API:
+.. Click *Integration > Configuration* from the side navigation.
+.. Select *edit integration settings* in the top right corner.
+.. In the *Authentication* section at the bottom of the screen select *OpenID Connect*.
+.. Click *Update Service*.
+.. When prompted for confirmation, click *OK*.
+
+. Configure the integration with the Orders API:
+.. If you are not already on the *Configuration* page, click *Integration > Configuration* from the side navigation.
+.. Click *add the base URL of your API and save the configuration.*
+.. In the *Private Base URL* field, enter the URL of the *Order Entry System* from the previous Solution Pattern that should look like this: `http://rhmi-lab-nodejs-order-frontend.<NAMESPACE>.svc:8080`. We can use the internal service DNS here, because both the API gateway, and the API itself are deployed on the same OpenShift cluster. In case the API was deployed on a different cluster or outside of OpenShift, a public URL would be required.
+.. Keep the fields *Staging Public Base URL* and *Production Public Base URL* unchanged, their values should look as follows:
++
+[subs="attributes+"]
+----
+https://orders-api-{user-sanitized-username}-apicast-staging.{openshift-app-host}
+
+https://orders-api-{user-sanitized-username}-apicast-production.{openshift-app-host}
+----
++
+.. Expand the *Authentication Settings* and make sure `Red Hat Single Sign-On` is selected in the *OpenID Connect Issuer Type*.
+.. In *OpenID Connect Issuer*, enter:
++
+[subs="attributes+"]
+----
+https://{zync-client-id}:ZYNC_SECRET@sso-user-sso.{openshift-app-host}/auth/realms/{user-sanitized-username}
+----
+Replace `ZYNC_SECRET` with the value of the Client Secret of the `{zync-client-id}` client created previously in {sso-ProductName}.
++
+.. In *OIDC Authorization Flow*, keep the `Authorization Code Flow` checkbox enabled.
+.. In the *Secret Token* field *OIDC Authorization Flow*, enter:
++
+[subs="attributes+"]
+----
+{gateway-secret-token}
+----
+.. In the *Credentials location*, select "As HTTP Headers" radio button.
+.. Add CORS (Cross-Origin-Resource-Sharing) policy, which is needed to call the API from the Developer Portal.
+... Expand the *Policies* section.
+... Select *Add Policy*.
+... Select *CORS* from the list.
+... Click on the arrow on the right of the policy name and drag the *CORS* policy to place it on the top of the Policy Chain.
+.. Click *Update the Staging Environment*.
+
+[type=verification]
+Was the configuration saved successfully without any errors?
+
+[type=verificationFail]
+Verify that you followed each step in the procedure above. If you are still having issues, contact your administrator.
+
+=== Configure an Application Plan and an Application
+Application Plans define what kind of access to which resources is granted to the API consumers. This includes which methods or endpoints are accessible, the rate limits globally for the API or for each endpoint. Finally, in case the API is monetized, pricing can be defined in the Application Plan.
+
+. Create a new *Application Plan*:
+.. Select *Applications > Application Plans* from the side navigation.
+.. Click *Create Application Plan*.
+.. Enter `orders-api-plan` for *Name* and *System name*.
+.. Leave the other fields with their default values.
+.. Click *Create Application Plan*. You will be redirected to the *Application Plans* screen.
+.. Select the *Publish* button, beside your plan list item, to publish the Plan.
++
+. Select the `orders-api-plan` plan name in the list to return to the edit screen.
++
+. Set a limit of 5 calls per hour:
+.. From the *Metrics, Methods, Limits & Pricing Rules* section, click the *Limits (0)* button.
+.. Click the *New usage limit* button.
+.. Set the *Period* to *hour*.
+.. Set the *Max. value* to *5*.
+.. Click *Create usage limit*.
++
+. Create a new *Application* for the *Developer* account, assigned to the Plan:
+.. Select *Audience* from the top navigation bar dropdown.
+.. Select the *Developer* account to open the *Account Summary* page.
+.. Select the *(num) Application* item from the breadcrumbs to view Applications.
+.. Click the *Create Application* button in the top right.
+.. Select the `orders-api-plan` Plan in the *Application plan* dropdown.
+.. Enter `orders-api-app` in the *Name* and *Description* fields.
+.. Click *Create Application*. You will be redirected to the application details page.
+.. Note the *Client ID* and *Client Secret* that are generated automatically.
+When the application is created, 3scale should create a client for that application in {sso-ProductName} realm.
++
+. Verify that a client has been created in {sso-ProductName}:
+.. Log in to link:{user-sso-url}/auth/admin/{user-sanitized-username}/console[{sso-ProductName} administration console, window="_blank"].
+.. Click *Clients* from the side navigation.
+
+[type=verification]
+Do you see the client with the same ID that the application in 3scale?
+
+[type=verificationFail]
+Verify that you followed each step in the procedure above. If you are still having issues, contact your administrator.
+
+=== Update the client in Red Hat Single Sign-On
+
+For testing the API from the Developer Portal, we'll need to enable CORS on the {sso-ProductName} client. Normally, this will not be needed, as the OAuth handshake and token exchange will be done on the server side.
+
+. Log in to link:{user-sso-url}/auth/admin/{user-sanitized-username}/console[{sso-ProductName} administration console, window="_blank"].
+. Click *Clients* from the side navigation.
+. Select the client that was created by 3scale from the clients list by clicking on its *Client ID*.
+. At the bottom of the page, enter `+` in the *Web Origins* field. This will allow CORS for the origins of the *Valid Redirect URIs* (will be configured later). You could also enter `*` to permit all origins, but it is considered a bad practice as it poses a security risk.
+. Click *Save* to save the changes.
+
+[type=taskResource]
+.Task Resources
+****
+* link:https://access.redhat.com/documentation/en-us/red_hat_3scale/2.3/html-single/access_control/[Access Control and Application Plans, window="_blank"]
+****
+
+[time=15]
+== Show the API documentation through the Developer Portal
+
+The specification of the API can be used to show the API documentation on the Developer Portal, so that consumers can learn how to use the API and try it from there using their credentials.
+
+=== Create a new ActiveDocs specification
+
+. Create a new ActiveDocs specification
+.. Log in to the link:https://{user-sanitized-username}-admin.{openshift-app-host}[3scale Admin Portal, window="_blank"].
+.. Select `orders-api` from the top navigation bar dropdown to go to the service configuration page.
+.. Click *ActiveDocs* from the side navigation.
+.. Click *Create your first spec*.
+.. Enter `orders_api` in the *Name* and *System name* fields of the *New Service Spec* form.
+.. Select the *Publish?* checkbox.
+.. Go to the following URL of the *Order Entry System* from the previous Solution Pattern `https://order-entry-ui-<NAMESPACE>.{openshift-app-host}/order-api-spec.json`.
+.. Copy the contents of `order-api-spec.json` to the *API JSON Spec* field of the *New Service Spec* form.
+.. Add the following section to the specification (for example, under the `"schemes"` field, at the same level):
++
+[subs="attributes+"]
+----
+  "host": "orders-api-{user-sanitized-username}-apicast-staging.{openshift-app-host}",
+  "securityDefinitions": {
+    "oauth2": {
+      "flow": "accessCode",
+      "authorizationUrl": "{user-sso-url}/auth/realms/{user-sanitized-username}/protocol/openid-connect/auth",
+      "tokenUrl": "{user-sso-url}/auth/realms/{user-sanitized-username}/protocol/openid-connect/token",
+      "scopes": {
+        "openid": "openid"
+      },
+      "type": "oauth2"
+    }
+  },
+  "security": [
+    {
+      "oauth2": [
+        "openid"
+      ]
+    }
+  ],
+----
+.. Click *Create Service* at the bottom of the screen.
++
+. Show the Swagger UI in the Developer Portal.
+
+NOTE: The Developer Portal comes with a built-in ActiveDocs feature based on the Swagger UI library for API specification visualization. However, the built-in version (`v2.2.10`) doesn't work well with the OAuth flows, so we will use a more recent version of the library.
+
+.. Select *Audience* from the top navigation bar dropdown.
+.. Select *Developer Portal > Content* from the side navigation.
+.. Select the *Documentation* page in the built-in CMS.
+.. Replace the default content in the *Draft* tab with the following:
++
+[subs="attributes+"]
+----
+<style>
+#main-content .full > .container {background-color: white;}
+</style>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/3.23.11/swagger-ui.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/3.23.11/swagger-ui-bundle.js"></script>
+
+<h1>Documentation</h1>
+<p>Use our live documentation to learn about the Orders API</p>
+<div id="swagger-ui"></div>
+<script type="text/javascript">
+  (function () {
+   
+    SwaggerUIBundle({
+      url: "{{ provider.api_specs.orders_api.url }}",
+      dom_id: '#swagger-ui',
+      presets: [
+        SwaggerUIBundle.presets.apis
+      ],
+      plugins: [
+        SwaggerUIBundle.plugins.DownloadUrl
+      ]
+    })
+  }());
+</script>
+----
+.. Click *Save* and *Publish*.
+.. Click *New Page* in the top right corner of the CMS.
+.. Enter `Swagger UI OAuth redirect` in the *Title* field.
+.. Enter `/oauth2-redirect.html` in the *Path* field.
+.. Select empty entry in the *Layout* field.
+.. In the *Draft* tab, copy and paste the contents of the link:https://raw.githubusercontent.com/swagger-api/swagger-ui/9253c0/dist/oauth2-redirect.html[`oauth2-redirect.html` page from Swagger UI, window="_blank"].
+.. Click *Create Page*.
+.. After the page is reloaded, click *Publish*.
+
+[type=verification]
+Click *Visit Portal* under the *Developer Portal* section on the side navigation and click *Documentation* in the top navigation. Can you see the visual representation of the Orders API specification?
+
+[type=verificationFail]
+Verify that you followed each step in the procedure above. If you are still having issues, contact your administrator.
+
+[time=10]
+== Make API calls through the Developer Portal
+
+. Log in to the Developer Portal:
+.. Go to the link:https://{user-sanitized-username}.{openshift-app-host}[3scale Developer Portal, window="_blank"].
+.. Close the side bar on the right, if it is open.
+.. Click *Sign in* in the top navigation bar.
+.. Enter `john` as *Username or Email* and `123456` as *Password*. These are the credentials of the _Developer_ account created by default for each tenant.
+.. Click *Sign in*.
++
+. Get the application credentials:
+.. Click *API Credentials* in the top navigation bar.
+.. Select *Applications*.
+.. Click on the `orders-api-app` name.
+.. You will see the application credentials – Client ID and Client Secret.
+.. In the *Redirect URL* field enter `https://{user-sanitized-username}.{openshift-app-host}/oauth2-redirect.html`. This will be the Redirect URL for the OAuth handshake, and it points to the HTML page on the Developer Portal we created in a previous step.
+.. Click *Submit* to save the new redirect URL. Zync will update the Redirect URL of the corresponding client in Red Hat Single Sign-On.
+.. Take note of the Client ID and Client Secret.
++
+. Make API calls through the documentation page without credentials:
+.. Click *Documentation* in the top navigation bar. You should see the visualized Orders API documentation.
+.. Expand the `GET /orders/history` and click *Try it out* and then *Execute*.
+.. You should get an error with code `403` and response body `Authentication parameters missing`. This is normal, because the API gateway is expecting the `Authorization` header with the access token, but it is not provided.
++
+. Authenticate with Red Hat Single Sign-On:
+.. Click *Authorize* button.
+.. In the modal window that opens, enter the Client ID and the Client Secret of the application `orders-api-app` in the corresponding fields `CLIENT_ID` and `CLIENT_SECRET`.
+.. Select the `OPENID` checkbox.
+.. Click *Authorize*.
+.. If a Red Hat Single Sign-On login screen is shown with `{user-sanitized-username} Realm` title, enter `{user-sanitized-username}` and `password` as username and password accordingly. It might not be shown, if you already logged in and the session has not expired.
+.. Click *Log In*. You will be redirected back ot the authorization modal window on the developer portal.
+.. Click *Close*.
+.. Under `GET /orders/history`, click *Execute* again (expand it and click *Try it out* if you don't see the *Execute* button).
+.. You should now receive a successful response with status code `200` and the list of orders in the response body.
+In the *Curl* field you will see the actual call that is being made. Note the `authorization` header, which has the value `Bearer <ACCESS_TOKEN>`. You can examine the contents of the `<ACCESS_TOKEN>` by pasting its value in the *Encoded* field in link:https://jwt.io[JWT.io Debugger, window="_blank"]
++
+. Verify that your API requests are rate limited:
+.. Click the *Execute* button more than five times. After several times you should get an error response with status code `429` and response body `Usage limit exceeded`. This is because we previously configured the limit of 5 calls per hour.
+
+NOTE: If you get error with status code `403: Forbidden` and response body `Authentication failed`, your access token probably has expired. In this case, click *Authorize* button, then click *Logout* and repeat the authorization steps.
+
+NOTE: 3scale may allow making 6 calls instead of 5 because of caching. After the 6th call all further requests within the current hour will be rejected.
+
+[type=verification]
+Have you made successful API calls from the Developer Portal and verified that the rate limit is applied correctly?
+
+[type=verificationFail]
+Verify that you followed each step in the procedure above. If you are still having issues, contact your administrator.
+
+:sectnums!:
+
+[type=taskResource]
+.Task Resources
+****
+* link:https://{user-sanitized-username}.{openshift-app-host}[3scale Developer Portal, window="_blank"]
+****
+
