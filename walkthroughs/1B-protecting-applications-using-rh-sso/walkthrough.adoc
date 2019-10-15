@@ -1,7 +1,7 @@
 :sso-realm-url: {user-sso-url}/auth/admin/{user-sanitized-username}/console/index.html
 :sso-adapter-docs-url: https://access.redhat.com/documentation/en-us/red_hat_single_sign-on/7.3/html/securing_applications_and_services_guide/index
 
-= Protecting Applications using Red Hat Single Sign-On (SSO)
+= 1B - Protecting Applications using Red Hat Single Sign-On (SSO)
 
 This Solution Pattern demonstrates how Red Hat SSO can be used to protect web applications by providing single sign-on capabilities based on popular standards such as SAML 2.0, OpenID Connect and OAuth 2.0.
 

@@ -6,7 +6,7 @@
 :zync-client-id: zync-oidc
 :gateway-secret-token: apicast-secret-token-{user-sanitized-username}
 
-= Managing and protecting APIs using API management
+= 1C - Managing and protecting APIs using API management
 
 This Solution Pattern demonstrates how an API can be protected and rate limited.
 
