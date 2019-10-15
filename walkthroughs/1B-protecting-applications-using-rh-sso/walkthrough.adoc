@@ -1,4 +1,4 @@
-:sso-realm-url: {user-sso-url}/auth/admin/{user-sanitized-username}/console/index.html
+sso-realm-url {user-sso-url}/auth/admin/{user-sanitized-username}/console/index.html
 :sso-adapter-docs-url: https://access.redhat.com/documentation/en-us/red_hat_single_sign-on/7.3/html/securing_applications_and_services_guide/index
 
 = 1B - Protecting Applications using Red Hat Single Sign-On (SSO)
@@ -30,7 +30,7 @@ RESTful API using AMQ Online* Solution Pattern.
 [type=walkthroughResource,serviceName=3scale]
 .User-Facing SSO
 ****
-* link:{sso-realm-url}[SSO Realm Console, window="_blank"]
+* link:sso-realm-url[SSO Realm Console, window="_blank"]
 * link:https://access.redhat.com/products/red-hat-single-sign-on/[Red Hat SSO Overview, window="_blank"]
 ****
 
@@ -51,7 +51,7 @@ Securing an application using Red Hat SSO requires a *Client* to be created in
 a *Realm*. The *Client* represents the application being secured and contains
 important details regarding the security applied to the application.
 
-. Navigate to the link:{sso-realm-url}[Red Hat SSO Realm, window="_blank"].
+. Navigate to the link:sso-realm-url[Red Hat SSO Realm, window="_blank"].
 . Enter the username `{user-username}` and password `password` if prompted.
 . Details for realm named {user-username} are displayed upon login success.
 . Select *Clients* from the menu on the left.
@@ -82,7 +82,7 @@ in the Red Hat SSO *Realm* with the details from their chosen
 In this Solution Pattern a *User* will be created manually to keep things
 simple.
 
-. Navigate to the link:{sso-realm-url}[Red Hat SSO Realm, window="_blank"].
+. Navigate to the link:sso-realm-url[Red Hat SSO Realm, window="_blank"].
 . Enter the username `{user-username}` and password `password` if prompted.
 . Select the *Users* entry in the side menu.
 . Click *Add user*.
@@ -126,7 +126,7 @@ coded. The Order Entry System has been developed to disable Red Hat SSO
 protection if a configuration is not found on startup. For a real application
 this may not be advisable.
 
-. Navigate to the link:{:sso-realm-url:}[Red Hat SSO Realm, window="_blank"].
+. Navigate to the link:{sso-realm-url}[Red Hat SSO Realm, window="_blank"].
 . Enter the username `{user-username}` and password `password` if prompted. 
 . Select *Clients* from the side menu.
 . Click the `order-entry-system` client that was created earlier.
