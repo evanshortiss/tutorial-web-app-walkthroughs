@@ -19,6 +19,8 @@ authentication and authorisation for the *Order Entry System* and the *Order
 Management System* from the *Integrating message-oriented middleware with a
 RESTful API using AMQ Online* Solution Pattern.
 
+image::images/arch.png[integration, role="integr8ly-img-responsive"]
+
 [type=walkthroughResource,serviceName=openshift]
 .Red Hat OpenShift
 ****
